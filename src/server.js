@@ -23,11 +23,29 @@ const AuthenticationsService = require('./services/postgres/AuthenticationsServi
 const authentications = require('./api/authentications');
 const AuthenticationsValidator = require('./validator/authentications');
 
+// Collaborations
+const collaborations = require('./api/collaborations');
+const CollaborationsService = require('./services/postgres/CollaborationsService');
+const CollaborationsValidator = require('./validator/collaborations');
+
+// Playlists
+const playlists = require('./api/playlists');
+const PlaylistsService = require('./services/postgres/PlaylistsService');
+const PlaylistsValidator = require('./validator/playlists');
+
+// Playlistsongs
+const playlistsongs = require('./api/playlistsongs');
+const PlaylistsongsService = require('./services/postgres/PlaylistsongsService');
+const PlaylistsongsValidator = require('./validator/playlistsongs');
+
 const init = async () => {
-  const songsService = new SongsService();
-  const albumsService = new AlbumsService();
+  const collaborationsService = new CollaborationsService();
   const usersService = new UsersService();
+  const albumsService = new AlbumsService();
+  const songsService = new SongsService();
   const authenticationsService = new AuthenticationsService();
+  const playlistsService = new PlaylistsService(collaborationsService);
+  const playlistsongsService = new PlaylistsongsService();
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -90,6 +108,30 @@ const init = async () => {
         usersService,
         tokenManager: TokenManager,
         validator: AuthenticationsValidator,
+      },
+    },
+    {
+      plugin: collaborations,
+      options: {
+        collaborationsService,
+        playlistsService,
+        validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: playlists,
+      options: {
+        playlistsService,
+        usersService,
+        validator: PlaylistsValidator,
+      },
+    },
+    {
+      plugin: playlistsongs,
+      options: {
+        playlistsongsService,
+        playlistsService,
+        validator: PlaylistsongsValidator,
       },
     },
   ]);
